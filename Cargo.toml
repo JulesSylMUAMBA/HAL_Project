@@ -4,6 +4,12 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+cortex-m = "0.7"   # Ajout de la dépendance pour cortex-m
+cortex-m-rt = "0.6.13"  # Dépendance pour le runtime de cortex-m
 
 [profile.release]
 panic = "abort"
+
+[features]
+atmega328p = []                # Feature pour l'Atmega328p
+cortex_m = []                  # Feature pour le Cortex-M

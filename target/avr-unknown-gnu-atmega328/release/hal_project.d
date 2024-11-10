@@ -1,1 +1,1 @@
-C:\Users\muamb\Desktop\ESILV\2024-2025\HW\ Virtualization\ &\ Trust\Tp\hal_project\target\avr-unknown-gnu-atmega328\release\hal_project.elf: C:\Users\muamb\Desktop\ESILV\2024-2025\HW\ Virtualization\ &\ Trust\Tp\hal_project\src\main.rs
+C:\Users\muamb\Desktop\ESILV\2024-2025\HW\ Virtualization\ &\ Trust\Tp\hal_project\target\avr-unknown-gnu-atmega328\release\hal_project.elf: C:\Users\muamb\Desktop\ESILV\2024-2025\HW\ Virtualization\ &\ Trust\Tp\hal_project\src\atmega328p.rs C:\Users\muamb\Desktop\ESILV\2024-2025\HW\ Virtualization\ &\ Trust\Tp\hal_project\src\main.rs

@@ -1,67 +1,41 @@
 #![no_std]
 #![no_main]
 
+use cortex_m_rt::entry;  // Import de la macro entry
 use core::panic::PanicInfo;
 
-const DDRB: *mut u8 = 0x24 as *mut u8; // Data Direction Register for Port B
-const PORTB: *mut u8 = 0x25 as *mut u8; // Port B Data Register
-const PINB: *mut u8 = 0x23 as *mut u8;  // Port B Input Pins Address
+#[cfg(feature = "atmega328p")]
+mod atmega328p;
 
-pub enum PinMode {
-    Input,
-    Output,
+#[cfg(feature = "cortex_m")]
+mod cortex_m;
+
+// Pointeur de pile initial, placé à l'adresse de fin de la RAM
+const INITIAL_SP: u32 = 0x2001_0000; // 64 Ko de SRAM pour lm3s6965evb
+
+// Table de vecteurs pour Cortex-M
+#[link_section = ".vectors"]
+#[no_mangle]
+pub static VECTORS: &[Option<unsafe extern "C" fn()>; 2] = &[
+    Some(start_stack),   // Adresse initiale de la pile
+    Some(reset_wrapper), // Pointeur de réinitialisation
+];
+
+// Fonction de démarrage de la pile
+#[no_mangle]
+pub extern "C" fn start_stack() {
+    // Cette fonction reste vide, utilisée uniquement comme référence pour la table de vecteurs.
 }
 
-pub enum PinState {
-    Low,
-    High,
+// Fonction intermédiaire pour appeler le gestionnaire de réinitialisation
+unsafe extern "C" fn reset_wrapper() {
+    reset_handler()
 }
 
-pub struct GPIO {
-    pin: u8,
-}
-
-impl GPIO {
-    // Fonction pour configurer un pin comme entrée ou sortie
-    pub fn set_mode(&self, mode: PinMode) {
-        unsafe {
-            match mode {
-                PinMode::Input => {
-                    // Configure comme entrée en effaçant le bit correspondant
-                    *DDRB &= !(1 << self.pin);
-                }
-                PinMode::Output => {
-                    // Configure comme sortie en mettant le bit correspondant
-                    *DDRB |= 1 << self.pin;
-                }
-            }
-        }
-    }
-
-    // Fonction pour écrire HIGH ou LOW sur un pin configuré comme sortie
-    pub fn write(&self, state: PinState) {
-        unsafe {
-            match state {
-                PinState::High => {
-                    *PORTB |= 1 << self.pin; // Met le pin à HIGH
-                }
-                PinState::Low => {
-                    *PORTB &= !(1 << self.pin); // Met le pin à LOW
-                }
-            }
-        }
-    }
-
-    // Fonction pour lire l'état d'un pin configuré comme entrée
-    pub fn read(&self) -> PinState {
-        unsafe {
-            if *PINB & (1 << self.pin) != 0 {
-                PinState::High
-            } else {
-                PinState::Low
-            }
-        }
-    }
+// Fonction de réinitialisation
+#[no_mangle]
+pub extern "C" fn reset_handler() -> ! {
+    main()
 }
 
 // Fonction de panic obligatoire dans un environnement no_std
@@ -70,13 +44,44 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-// Exemple d'utilisation de l'abstraction GPIO
-#[no_mangle]
-pub extern "C" fn main() -> ! {
-    let gpio = GPIO { pin: 5 }; // Utilisation du pin 5 (PB5, connectée à la LED sur Arduino Uno)
+// Fonction principale
+#[entry]  // Définition de la fonction main comme point d'entrée
+fn main() -> ! {
+    #[cfg(feature = "atmega328p")]
+    {
+        atmega328p::usart_init();
+        atmega328p::usart_send(0x41); // Envoi d'un octet 'A'
+        atmega328p::usart_send(0x42); // Envoi d'un octet 'B' pour tester si le programme avance
+    }
 
-    gpio.set_mode(PinMode::Output); // Configure le pin 5 comme sortie
-    gpio.write(PinState::High);     // Met le pin 5 à HIGH (allume la LED)
+    #[cfg(feature = "cortex_m")]
+    {
+        cortex_m::usart_init();
+        cortex_m::usart_send(0x41); // Envoi d'un octet 'A'
+        cortex_m::usart_send(0x42); // Envoi d'un octet 'B' pour tester si le programme avance
+    }
 
-    loop {}
+    // Boucle infinie avec "blink"
+    loop {
+        // Envoi d'un octet 'B' périodiquement pour simuler un blink
+        #[cfg(feature = "atmega328p")]
+        {
+            atmega328p::usart_send(0x42); // Envoi de 'B'
+        }
+
+        #[cfg(feature = "cortex_m")]
+        {
+            cortex_m::usart_send(0x42); // Envoi de 'B'
+        }
+
+        delay(); // Attendre un moment pour simuler un délai (blink)
+    }
+}
+
+// Simule un délai
+fn delay() {
+    // Une boucle qui consomme du temps pour simuler un délai
+    for _ in 0..1_000_000 {
+        // Simule un léger délai
+    }
 }
