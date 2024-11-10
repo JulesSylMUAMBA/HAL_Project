@@ -1,11 +1,12 @@
+/* [CORRECTION GPIO] 
+    Consider subdividing your project into separate modules. 
+(Don't hesitate to remove this comment)*/
 #![no_std]
 #![no_main]
 
 use cortex_m_rt::entry;  // Import de la macro entry
 use core::panic::PanicInfo;
 
-#[cfg(feature = "atmega328p")]
-mod atmega328p;
 
 #[cfg(feature = "cortex_m")]
 mod cortex_m;
