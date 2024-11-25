@@ -1,12 +1,11 @@
-/* [CORRECTION GPIO] 
-    Consider subdividing your project into separate modules. 
-(Don't hesitate to remove this comment)*/
 #![no_std]
 #![no_main]
 
-use cortex_m_rt::entry;  // Import de la macro entry
+use cortex_m_rt::entry; // Import de la macro entry
 use core::panic::PanicInfo;
 
+#[cfg(feature = "atmega328p")]
+mod atmega328p;
 
 #[cfg(feature = "cortex_m")]
 mod cortex_m;
@@ -36,7 +35,7 @@ unsafe extern "C" fn reset_wrapper() {
 // Fonction de réinitialisation
 #[no_mangle]
 pub extern "C" fn reset_handler() -> ! {
-    main()
+    run_application() // Appelle la logique principale de ton application
 }
 
 // Fonction de panic obligatoire dans un environnement no_std
@@ -45,34 +44,49 @@ fn panic(_info: &PanicInfo) -> ! {
     loop {}
 }
 
-// Fonction principale
-#[entry]  // Définition de la fonction main comme point d'entrée
+// Fonction principale annotée avec #[entry] pour définir le point d'entrée
+#[entry]
 fn main() -> ! {
+    run_application()
+}
+
+// Logique principale de l'application
+fn run_application() -> ! {
     #[cfg(feature = "atmega328p")]
     {
-        atmega328p::usart_init();
-        atmega328p::usart_send(0x41); // Envoi d'un octet 'A'
-        atmega328p::usart_send(0x42); // Envoi d'un octet 'B' pour tester si le programme avance
+        // Initialisation SPI pour l'Atmega328p
+        atmega328p::spi_init();
+
+        // Envoi d'un octet via SPI
+        atmega328p::spi_send(0xAB); // Exemple d'envoi
+        atmega328p::spi_send(0xCD); // Autre octet
+
+        loop {
+            atmega328p::spi_send(0x55); // Envoi continu du caractère 'U'
+            delay();
+        }
     }
 
     #[cfg(feature = "cortex_m")]
     {
-        cortex_m::usart_init();
-        cortex_m::usart_send(0x41); // Envoi d'un octet 'A'
-        cortex_m::usart_send(0x42); // Envoi d'un octet 'B' pour tester si le programme avance
+        // Initialisation SPI pour le Cortex-M
+        cortex_m::spi_init();
+
+        // Envoi d'un octet via SPI
+        cortex_m::spi_send(0xAB); // Exemple d'envoi
+        cortex_m::spi_send(0xCD); // Autre octet
     }
 
     // Boucle infinie avec "blink"
     loop {
-        // Envoi d'un octet 'B' périodiquement pour simuler un blink
         #[cfg(feature = "atmega328p")]
         {
-            atmega328p::usart_send(0x42); // Envoi de 'B'
+            atmega328p::spi_send(0x42); // Envoi de 'B' via SPI
         }
 
         #[cfg(feature = "cortex_m")]
         {
-            cortex_m::usart_send(0x42); // Envoi de 'B'
+            cortex_m::spi_send(0x42); // Envoi de 'B' via SPI
         }
 
         delay(); // Attendre un moment pour simuler un délai (blink)
@@ -81,7 +95,6 @@ fn main() -> ! {
 
 // Simule un délai
 fn delay() {
-    // Une boucle qui consomme du temps pour simuler un délai
     for _ in 0..1_000_000 {
         // Simule un léger délai
     }

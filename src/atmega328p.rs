@@ -1,34 +1,35 @@
-const UCSR0A: *mut u8 = 0xC0 as *mut u8; // USART Control and Status Register A
-const UCSR0B: *mut u8 = 0xC1 as *mut u8; // USART Control and Status Register B
-const UCSR0C: *mut u8 = 0xC2 as *mut u8; // USART Control and Status Register C
-const UBRR0H: *mut u8 = 0xC5 as *mut u8; // USART Baud Rate Register High
-const UBRR0L: *mut u8 = 0xC4 as *mut u8; // USART Baud Rate Register Low
-const UDR0: *mut u8 = 0xC6 as *mut u8;   // USART Data Register
+const SPCR: *mut u8 = 0x2C as *mut u8; // SPI Control Register
+const SPSR: *mut u8 = 0x2E as *mut u8; // SPI Status Register
+const SPDR: *mut u8 = 0x2F as *mut u8; // SPI Data Register
 
-pub fn usart_init() {
+// Définir les bits de SPCR
+const SPI_ENABLE: u8 = 0x40; // SPI Enable
+const SPI_MASTER: u8 = 0x10; // Master Mode
+const SPI_CLK_DIV16: u8 = 0x03; // Clock Divider Fosc/16
+
+pub fn spi_init() {
     unsafe {
-        let baud: u16 = 103; // Baud rate pour 9600 bps avec une horloge de 16 MHz
-        *UBRR0H = (baud >> 8) as u8;
-        *UBRR0L = baud as u8;
-
-        // Mode 8 bits, sans parité, 1 bit de stop
-        *UCSR0C = (1 << 1) | (1 << 2);
-
-        // Activer la transmission et la réception
-        *UCSR0B = (1 << 3) | (1 << 4);
+        
+        *SPCR = SPI_ENABLE | SPI_MASTER | SPI_CLK_DIV16; 
     }
 }
 
-pub fn usart_send(data: u8) {
+pub fn spi_send(data: u8) {
     unsafe {
-        while *UCSR0A & (1 << 5) == 0 {} // Attendre que le buffer soit prêt
-        *UDR0 = data; // Envoyer les données
+        // Charger les données à envoyer dans le registre SPDR
+        *SPDR = data;
+
+        // Attendre que la transmission soit terminée (vérifier le bit SPIF dans le registre SPSR)
+        while *SPSR & 0x80 == 0 {} // Attendre la fin de la transmission
     }
 }
-#[allow(dead_code)]
-pub fn usart_receive() -> u8 {
+
+pub fn spi_receive() -> u8 {
     unsafe {
-        while *UCSR0A & (1 << 7) == 0 {} // Attendre la réception des données
-        *UDR0 // Lire les données reçues
+        // Attendre que les données aient été reçues
+        while *SPSR & 0x80 == 0 {} // Attendre que SPIF soit à 1, signalant que les données sont prêtes
+
+        // Retourner les données lues dans le registre SPDR
+        *SPDR
     }
 }

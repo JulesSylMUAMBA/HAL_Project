@@ -1,0 +1,3 @@
+cargo:rustc-link-search=C:\Users\muamb\Desktop\ESILV\2024-2025\HW Virtualization & Trust\Tp\hal_project\target\avr-unknown-gnu-atmega328\release\build\cortex-m-rt-2340da300ef51e42\out
+cargo:rerun-if-changed=build.rs
+cargo:rerun-if-changed=link.x.in
