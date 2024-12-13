@@ -1,3 +1,8 @@
+/*
+[CORRECTION USART] (Don't hesitate to remove this part)
+You didn't implement the USART feature.
+*/
+
 #![no_std]
 #![no_main]
 
