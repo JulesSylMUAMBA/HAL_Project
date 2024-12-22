@@ -15,6 +15,12 @@ mod atmega328p;
 #[cfg(feature = "cortex_m")]
 mod cortex_m;
 
+#[cfg(feature = "atmega328p")]
+mod atmega328p_i2c;
+
+#[cfg(feature = "cortex_m")]
+mod cortex_m_i2c;
+
 // Pointeur de pile initial, placé à l'adresse de fin de la RAM
 const INITIAL_SP: u32 = 0x2001_0000; // 64 Ko de SRAM pour lm3s6965evb
 
@@ -62,9 +68,19 @@ fn run_application() -> ! {
         // Initialisation SPI pour l'Atmega328p
         atmega328p::spi_init();
 
+        // Initialisation I2C pour l'Atmega328p
+        atmega328p_i2c::i2c_init();
+
         // Envoi d'un octet via SPI
         atmega328p::spi_send(0xAB); // Exemple d'envoi
         atmega328p::spi_send(0xCD); // Autre octet
+
+        // Envoi d'un octet via I2C
+        atmega328p_i2c::i2c_send(0x01);
+
+        // Test réception I2C
+        let received = atmega328p_i2c::i2c_receive();
+        atmega328p::spi_send(received); // Renvoi via SPI pour vérification
 
         loop {
             atmega328p::spi_send(0x55); // Envoi continu du caractère 'U'
@@ -77,9 +93,19 @@ fn run_application() -> ! {
         // Initialisation SPI pour le Cortex-M
         cortex_m::spi_init();
 
+        // Initialisation I2C pour le Cortex-M
+        cortex_m_i2c::i2c_init();
+
         // Envoi d'un octet via SPI
         cortex_m::spi_send(0xAB); // Exemple d'envoi
         cortex_m::spi_send(0xCD); // Autre octet
+
+        // Envoi d'un octet via I2C
+        cortex_m_i2c::i2c_send(0x01);
+
+        // Test réception I2C
+        let received = cortex_m_i2c::i2c_receive();
+        cortex_m::spi_send(received); // Renvoi via SPI pour vérification
     }
 
     // Boucle infinie avec "blink"
