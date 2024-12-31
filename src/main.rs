@@ -1,6 +1,9 @@
 /*
 [CORRECTION USART] (Don't hesitate to remove this part)
 You didn't implement the USART feature.
+
+[CORRECTION SPI] (don't hesitate to remove this part)
+You should implement the peripheral/slave mode as well (not only the controler/master mode).
 */
 
 #![no_std]
